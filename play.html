@@ -1,0 +1,1172 @@
+<!DOCTYPE html> 
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Zombie Quiz Game</title>
+  <style>
+    * { 
+      box-sizing: border-box; 
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background-color: #000000;
+      font-family: 'Kanit', sans-serif;
+      color: #ffffff;
+      touch-action: none;
+    }
+    
+    #gameContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      height: -webkit-fill-available;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #121212;
+      touch-action: none;
+    }
+    
+    #gameCanvas {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+      background-color: #1e1e1e;
+      touch-action: none;
+    }
+
+    #topBanner {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      background: rgba(18, 18, 18, 0.95);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid rgba(0, 255, 136, 0.3);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    .user-info {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .zombie-count {
+      background: rgba(0, 255, 136, 0.15);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #00ff88;
+      border: 1px solid #00ff88;
+    }
+
+    #bottomBanner {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      background: rgba(18, 18, 18, 0.95);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-top: 2px solid rgba(255, 187, 0, 0.3);
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
+    }
+
+    .score-board {
+      background: rgba(255, 187, 0, 0.15);
+      padding: 8px 24px;
+      border-radius: 25px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ffbb00;
+      border: 1px solid #ffbb00;
+      box-shadow: 0 0 12px rgba(255, 187, 0, 0.3);
+    }
+
+    #nameInputModal {
+      display: flex;
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(10px);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 40;
+      padding: 20px;
+    }
+
+    .input-box {
+      background: #1e1e1e;
+      border: 2px solid #00ff88;
+      padding: 28px;
+      border-radius: 16px;
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
+    }
+
+    .input-box h2 {
+      margin-bottom: 8px;
+      color: #00ff88;
+    }
+
+    .input-box input {
+      width: 100%;
+      padding: 14px;
+      margin: 18px 0;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #2a2a2a;
+      color: #fff;
+      font-size: 1rem;
+      text-align: center;
+      outline: none;
+      touch-action: auto;
+    }
+
+    .input-box input:focus {
+      border-color: #00ff88;
+    }
+
+    #startCountdownModal {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(10px);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 30;
+    }
+
+    .btn-main {
+      padding: 14px 36px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ffffff;
+      background: linear-gradient(135deg, #ff4757, #ff6b81);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(255, 71, 87, 0.6);
+      transition: transform 0.2s, box-shadow 0.2s;
+      touch-action: manipulation;
+    }
+
+    .btn-main:active {
+      transform: scale(0.95);
+    }
+
+    #startCountdownText {
+      display: none;
+      font-size: 48px;
+      font-weight: 900;
+      color: #ffffff;
+      text-align: center;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-shadow: 0 0 15px #ffffff, 0 0 35px rgba(0, 255, 136, 0.9);
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    #startCountdownText.show {
+      opacity: 1;
+      display: block;
+      animation: subtleShakeEffect 0.15s infinite alternate;
+    }
+
+    @keyframes subtleShakeEffect {
+      0% { transform: scale(1.02) translate(0, 0); }
+      50% { transform: scale(1.02) translate(1px, -1px); }
+      100% { transform: scale(1.02) translate(-1px, 1px); }
+    }
+
+    .modal {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      z-index: 35;
+      padding: 15px;
+    }
+    
+    .modal-content {
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+      width: 95%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+      text-align: center;
+      border: 2px solid #ff4444;
+    }
+
+    .btn-option {
+      background-color: #3700b3;
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      margin: 8px 0;
+      width: 100%;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      text-align: left;
+      line-height: 1.4;
+      touch-action: manipulation;
+    }
+
+    .btn-option:active {
+      background-color: #6200ee;
+      transform: scale(0.97);
+    }
+
+    #timerText {
+      font-size: 36px;
+      color: #ffbb00;
+      margin: 15px 0;
+      font-weight: bold;
+    }
+
+    #result-box {
+      display: none;
+      margin-top: 10px;
+      padding: 12px;
+      background-color: #2c2c2c;
+      border-left: 4px solid #03dac6;
+      border-radius: 4px;
+      text-align: left;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .btn-next {
+      margin-top: 18px;
+      padding: 12px 30px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #000;
+      background: #00ff88;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+      touch-action: manipulation;
+    }
+
+    .btn-next:active {
+      transform: scale(0.95);
+    }
+
+    .ranking-list {
+      width: 100%;
+      margin-top: 15px;
+      text-align: left;
+    }
+
+    .ranking-item {
+      background: #2a2a2a;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid #00ff88;
+    }
+
+    .ranking-bar-bg {
+      width: 100%;
+      background: #333;
+      height: 10px;
+      border-radius: 5px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .ranking-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff88, #03dac6);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    /* ป้องกันการกดรัวแล้วหน้าจอขยายหรือค้าง */
+    button, canvas {
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="gameContainer">
+    <div id="topBanner">
+      <div class="user-info">👤 ผู้เล่น: <span id="displayName">ยังไม่ระบุ</span></div>
+      <div class="zombie-count">🧟 จัดการ: <span id="zombieCount">0</span> / 20</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="bottomBanner">
+      <div class="score-board">⭐ คะแนน: <span id="scoreText">0</span></div>
+    </div>
+
+    <div id="nameInputModal">
+      <div class="input-box">
+        <h2>🎮 ต้อนรับผู้ลุยอนาคต</h2>
+        <p style="font-size: 0.9rem; color: #aaa;">กรุณากรอกชื่อ-นามสกุลก่อนเข้าสู่เกม</p>
+        <input type="text" id="playerNameInput" placeholder="ระบุชื่อ - นามสกุลของคุณ" maxlength="40">
+        <button class="btn-main" onclick="submitPlayerName()">ตกลง</button>
+      </div>
+    </div>
+
+    <div id="startCountdownModal">
+      <button id="btnStartGame" class="btn-main" onclick="initAndStartCinematic()">TAP TO START</button>
+      <div id="startCountdownText">ARE YOU READY?</div>
+    </div>
+
+    <div id="quizModal" class="modal">
+      <div class="modal-content">
+        <h2 id="question-title">กำลังโหลดคำถาม...</h2>
+        <div id="options-container"></div>
+      </div>
+    </div>
+
+    <div id="resultModal" class="modal">
+      <div class="modal-content">
+        <h2>🎉 กำลังประมวลผลผลลัพธ์...</h2>
+        <p style="font-size: 0.9rem;">กรุณารอสักครู่ ระบบกำลังคำนวณตัวตนของคุณ</p>
+        <div id="timerText">5</div>
+        <div id="result-box"></div>
+      </div>
+    </div>
+
+    <!-- Modal หน้าแสดงจัดอันดับ (Ranking) -->
+    <div id="rankingModal" class="modal">
+      <div class="modal-content">
+        <h2>📊 สถิติการเลือกสายเรียน</h2>
+        <p style="font-size: 0.85rem; color: #aaa; margin-top: 4px;">สรุปอันดับสายเรียนที่ถูกเลือกมากที่สุด</p>
+        
+        <div id="rankingContainer" class="ranking-list"></div>
+
+        <button class="btn-next" onclick="location.reload()">🔄 เล่นใหม่อีกครั้ง</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    document.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    document.addEventListener('gesturestart', function(e) {
+      e.preventDefault();
+    });
+
+    const socket = typeof io !== 'undefined' ? io() : null;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let W = 800;
+    let H = 600;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      W = canvas.width;
+      H = canvas.height;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    let audioCtx = null;
+    let playerName = "";
+    let score = 0;
+
+    const audioElements = {
+      ready: new Audio('audio/ready.mp3'),
+      start: new Audio('audio/start.mp3'),
+      shoot: new Audio('audio/shoot.mp3'),
+      quiz: new Audio('audio/quiz.mp3')
+    };
+
+    audioElements.start.loop = true;
+    audioElements.start.volume = 0.8;
+    audioElements.quiz.loop = true;
+    audioElements.quiz.volume = 0.8;
+
+    function playSound(key) {
+      const audio = audioElements[key];
+      if (audio) {
+        if (key === 'shoot') {
+          const shootClone = audio.cloneNode();
+          shootClone.volume = 0.4;
+          shootClone.currentTime = 0;
+          shootClone.play().catch(e => console.warn(e));
+        } else {
+          audio.currentTime = 0;
+          audio.play().catch(e => console.warn(e));
+        }
+      }
+      return audio;
+    }
+
+    function stopSound(key) {
+      const audio = audioElements[key];
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    }
+
+    function submitPlayerName() {
+      const input = document.getElementById('playerNameInput').value.trim();
+      if (!input) {
+        alert("กรุณากรอกชื่อ-นามสกุลก่อนเริ่มเล่นเกม!");
+        return;
+      }
+      playerName = input;
+      document.getElementById('displayName').innerText = playerName;
+      document.getElementById('nameInputModal').style.display = 'none';
+      document.getElementById('startCountdownModal').style.display = 'flex';
+    }
+
+    let gameStarted = false;
+    let currentQuestionIndex = 0;
+    let selectedTypes = [];
+  
+   const questions = [
+  {
+    title: "1. ถ้าครูให้เลือกทำโครงงานที่ต้องใช้เวลาหลายสัปดาห์ คุณอยากทำแบบใดมากที่สุด?",
+    options: [
+      { text: "A. ศึกษาปัญหาของคนในชุมชนและเสนอแนวทางแก้ไข", type: "ศิลป์-สังคม" },
+      { text: "B. ทดลองหาคำตอบจากการเปลี่ยนตัวแปรต่าง ๆ", type: "วิทย์-คณิต" },
+      { text: "C. สำรวจพฤติกรรมการซื้อของนักเรียนแล้วนำข้อมูลมาวิเคราะห์", type: "ศิลป์-คำนวณ" },
+      { text: "D. สร้างชิ้นงานหรือผลิตภัณฑ์ที่สามารถนำไปใช้ได้จริง", type: "สายอาชีพ" },
+      { text: "E. ศึกษาคำหรือวัฒนธรรมของประเทศที่สนใจ", type: "ศิลป์-ภาษา" }
+    ]
+  },
+  {
+    title: "2. เพื่อนในกลุ่มส่งข้อความมาว่า “ช่วยคิดวิธีนำเสนองานให้คนฟังสนใจหน่อย” คุณจะเลือกทำอะไร?",
+    options: [
+      { text: "A. ทำกราฟและตัวเลขให้เห็นข้อมูลชัดเจน", type: "ศิลป์-คำนวณ" },
+      { text: "B. คิดเรื่องราวและประเด็นทางสังคมที่เชื่อมโยงกับหัวข้อ", type: "ศิลป์-สังคม" },
+      { text: "C. ออกแบบและทำชิ้นงานประกอบการนำเสนอ", type: "สายอาชีพ" },
+      { text: "D. คิดคำพูดหรือเรื่องราวให้น่าสนใจและเข้าใจง่าย", type: "ศิลป์-ภาษา" },
+      { text: "E. อธิบายหลักการหรือข้อมูลทางวิทยาศาสตร์ที่เกี่ยวข้อง", type: "วิทย์-คณิต" }
+    ]
+  },
+  {
+    title: "3. ถ้าคุณได้รับเงิน 1,000 บาทเพื่อทำกิจกรรมที่ตัวเองสนใจ คุณจะนำไปทำอะไร?",
+    options: [
+      { text: "A. ซื้ออุปกรณ์ทดลองเพื่อหาคำตอบเกี่ยวกับสิ่งที่สงสัย", type: "วิทย์-คณิต" },
+      { text: "B. ซื้อหนังสือหรือสื่อสำหรับเรียนภาษาใหม่", type: "ศิลป์-ภาษา" },
+      { text: "C. ซื้อวัสดุเพื่อทำของใช้หรือผลิตภัณฑ์", type: "สายอาชีพ" },
+      { text: "D. ซื้ออุปกรณ์เพื่อทำกราฟ ตาราง หรือวิเคราะห์ข้อมูล", type: "ศิลป์-คำนวณ" },
+      { text: "E. ซื้อหนังสือเกี่ยวกับประวัติศาสตร์หรือเรื่องราวของสังคม", type: "ศิลป์-สังคม" }
+    ]
+  },
+  {
+    title: "4. ถ้าต้องเลือกหัวข้อหนึ่งเพื่อพูดหน้าชั้น คุณอยากพูดเรื่องใด?",
+    options: [
+      { text: "A. การเปลี่ยนแปลงของสภาพอากาศและผลต่อสิ่งมีชีวิต", type: "วิทย์-คณิต" },
+      { text: "B. วัฒนธรรมและวิถีชีวิตของคนในประเทศต่าง ๆ", type: "ศิลป์-ภาษา" },
+      { text: "C. ปัญหาที่เกิดขึ้นในชุมชนของเรา", type: "ศิลป์-สังคม" },
+      { text: "D. การวางแผนรายรับรายจ่ายของวัยรุ่น", type: "ศิลป์-คำนวณ" },
+      { text: "E. วิธีสร้างผลิตภัณฑ์ง่าย ๆ เพื่อสร้างรายได้", type: "สายอาชีพ" }
+    ]
+  },
+  {
+    title: "5. ถ้าครูให้ปัญหาว่า “โรงเรียนใช้ไฟฟ้ามากเกินไป” คุณอยากรับผิดชอบส่วนใด?",
+    options: [
+      { text: "A. สำรวจว่าพฤติกรรมของนักเรียนเกี่ยวข้องกับปัญหาอย่างไร", type: "ศิลป์-สังคม" },
+      { text: "B. คำนวณค่าไฟและเปรียบเทียบข้อมูลแต่ละเดือน", type: "ศิลป์-คำนวณ" },
+      { text: "C. ทดลองวิธีลดการใช้ไฟฟ้าและเก็บผลการทดลอง", type: "วิทย์-คณิต" },
+      { text: "D. ออกแบบอุปกรณ์หรือวิธีช่วยลดการใช้ไฟ", type: "สายอาชีพ" },
+      { text: "E. ทำสื่อประชาสัมพันธ์ให้คนเข้าใจและปฏิบัติตาม", type: "ศิลป์-ภาษา" }
+    ]
+  },
+  {
+    title: "6. ถ้าต้องทำงานกลุ่มกับเพื่อนที่มีความคิดเห็นต่างกัน คุณมักจะ…",
+    options: [
+      { text: "A. ใช้ข้อมูลและเหตุผลมาช่วยตัดสิน", type: "วิทย์-คณิต" },
+      { text: "B. ช่วยพูดคุยให้ทุกคนเข้าใจกัน", type: "ศิลป์-ภาษา" },
+      { text: "C. ทดลองแต่ละแนวทางแล้วดูผลที่เกิดขึ้น", type: "สายอาชีพ" },
+      { text: "D. เปรียบเทียบข้อดีข้อเสียของแต่ละทางเลือก", type: "ศิลป์-คำนวณ" },
+      { text: "E. พยายามหาวิธีที่นำไปทำได้จริง", type: "ศิลป์-สังคม" }
+    ]
+  },
+  {
+    title: "7. ถ้าคุณมีเวลาว่าง 3 ชั่วโมงหลังเลิกเรียน คุณมีแนวโน้มจะเลือกทำอะไร?",
+    options: [
+      { text: "A. ดูสารคดีเกี่ยวกับสังคม ประวัติศาสตร์ หรือเหตุการณ์ต่าง ๆ", type: "ศิลป์-สังคม" },
+      { text: "B. ฝึกภาษาโดยดูหนังหรือฟังเพลงต่างประเทศ", type: "ศิลป์-ภาษา" },
+      { text: "C. ทำอาหาร งานฝีมือ หรือทดลองทำของด้วยตัวเอง", type: "สายอาชีพ" },
+      { text: "D. ฝึกโจทย์คณิตศาสตร์หรือคิดปัญหา", type: "ศิลป์-คำนวณ" },
+      { text: "E. ทดลองหรือค้นคว้าเรื่องวิทยาศาสตร์ที่สนใจ", type: "วิทย์-คณิต" }
+    ]
+  },
+  {
+    title: "8. ถ้าเพื่อนขอให้ช่วยวางแผนขายของในงานโรงเรียน คุณอยากทำส่วนใด?",
+    options: [
+      { text: "A. คิดต้นทุน กำไร และจำนวนสินค้าที่ควรขาย", type: "ศิลป์-คำนวณ" },
+      { text: "B. ทำผลิตภัณฑ์หรือจัดเตรียมสินค้า", type: "สายอาชีพ" },
+      { text: "C. ศึกษาว่าคนในโรงเรียนสนใจสินค้าประเภทใด", type: "ศิลป์-สังคม" },
+      { text: "D. คิดคำโฆษณาหรือพูดแนะนำสินค้า", type: "ศิลป์-ภาษา" },
+      { text: "E. ทดลองหาวิธีทำสินค้าให้มีคุณภาพดีขึ้น", type: "วิทย์-คณิต" }
+    ]
+  },
+  {
+    title: "9. ถ้าคุณต้องเลือกกิจกรรมในค่ายหนึ่งวัน คุณจะเลือกกิจกรรมใด?",
+    options: [
+      { text: "A. ทดลองทางวิทยาศาสตร์", type: "วิทย์-คณิต" },
+      { text: "B. สนทนากับชาวต่างชาติ", type: "ศิลป์-ภาษา" },
+      { text: "C. จำลองการแก้ปัญหาของชุมชน", type: "ศิลป์-สังคม" },
+      { text: "D. วางแผนธุรกิจจำลอง", type: "ศิลป์-คำนวณ" },
+      { text: "E. ฝึกทำอาหารหรือสร้างสิ่งของ", type: "สายอาชีพ" }
+    ]
+  },
+  {
+    title: "10. ถ้าครูให้เลือกหนังสือหนึ่งเล่มไปอ่าน คุณจะเลือกแบบใด?",
+    options: [
+      { text: "A. หนังสือเกี่ยวกับการเงินและการวางแผน", type: "ศิลป์-คำนวณ" },
+      { text: "B. หนังสือวิทยาศาสตร์หรือเทคโนโลยี", type: "วิทย์-คณิต" },
+      { text: "C. หนังสือภาษา วรรณกรรม หรือเรื่องราวจากต่างประเทศ", type: "ศิลป์-ภาษา" },
+      { text: "D. หนังสือเกี่ยวกับประวัติศาสตร์และสังคม", type: "ศิลป์-สังคม" },
+      { text: "E. หนังสือสอนทำอาหาร งานช่าง หรือทักษะอาชีพ", type: "สายอาชีพ" }
+    ]
+  },
+  {
+    title: "11. ถ้าโทรศัพท์หรืออุปกรณ์ไฟฟ้าที่บ้านเสีย คุณอยากทำอะไร?",
+    options: [
+      { text: "A. ค้นหาข้อมูลว่าปัญหาอาจเกิดจากอะไร", type: "วิทย์-คณิต" },
+      { text: "B. พยายามสื่อสารกับคนอื่นเพื่อขอคำแนะนำ", type: "ศิลป์-ภาษา" },
+      { text: "C. คิดค่าใช้จ่ายว่าซ่อมหรือซื้อใหม่แบบไหนคุ้มกว่า", type: "ศิลป์-คำนวณ" },
+      { text: "D. ลองตรวจสอบหรือซ่อมด้วยตัวเอง", type: "สายอาชีพ" },
+      { text: "E. สนใจว่าการใช้อุปกรณ์เหล่านี้ส่งผลต่อชีวิตประจำวันอย่างไร", type: "ศิลป์-สังคม" }
+    ]
+  },
+  {
+    title: "12. ถ้าต้องทำโปสเตอร์เกี่ยวกับปัญหาสังคม คุณอยากนำเสนอเรื่องใด?",
+    options: [
+      { text: "A. ปัญหาขยะในชุมชน", type: "ศิลป์-สังคม" },
+      { text: "B. การใช้เงินอย่างเหมาะสมของวัยรุ่น", type: "ศิลป์-คำนวณ" },
+      { text: "C. ผลกระทบของมลพิษต่อสุขภาพและสิ่งแวดล้อม", type: "วิทย์-คณิต" },
+      { text: "D. ความแตกต่างของวัฒนธรรมในแต่ละประเทศ", type: "ศิลป์-ภาษา" },
+      { text: "E. การสร้างอาชีพจากทรัพยากรในท้องถิ่น", type: "สายอาชีพ" }
+    ]
+  },
+  {
+    title: "13. ถ้าครูให้ข้อมูลจำนวนมากมา 1 ชุด คุณอยากทำอะไรกับข้อมูลนั้น?",
+    options: [
+      { text: "A. หาความสัมพันธ์และคำนวณตัวเลข", type: "ศิลป์-คำนวณ" },
+      { text: "B. หาคำอธิบายว่าข้อมูลเกี่ยวข้องกับธรรมชาติอย่างไร", type: "วิทย์-คณิต" },
+      { text: "C. อ่านและตีความความคิดเห็นของผู้คน", type: "ศิลป์-สังคม" },
+      { text: "D. นำข้อมูลไปสร้างแผนการทำงานจริง", type: "สายอาชีพ" },
+      { text: "E. เรียบเรียงข้อมูลให้เป็นเรื่องที่คนอื่นเข้าใจง่าย", type: "ศิลป์-ภาษา" }
+    ]
+  },
+  {
+    title: "14. ถ้าต้องจัดกิจกรรมให้เด็กในชุมชน คุณอยากทำกิจกรรมแบบใด?",
+    options: [
+      { text: "A. กิจกรรมทดลองวิทยาศาสตร์ง่าย ๆ", type: "วิทย์-คณิต" },
+      { text: "B. กิจกรรมฝึกพูดภาษาอังกฤษ", type: "ศิลป์-ภาษา" },
+      { text: "C. กิจกรรมเรียนรู้ประวัติและวัฒนธรรมท้องถิ่น", type: "ศิลป์-สังคม" },
+      { text: "D. กิจกรรมฝึกทำของใช้หรืออาหาร", type: "สายอาชีพ" },
+      { text: "E. กิจกรรมวางแผนการใช้เงินอย่างง่าย", type: "ศิลป์-คำนวณ" }
+    ]
+  },
+  {
+    title: "15. ถ้าต้องเลือกงานที่ทำติดต่อกันหลายชั่วโมง คุณคิดว่างงานใดเหมาะกับคุณที่สุด?",
+    options: [
+      { text: "A. วิเคราะห์ข้อมูลและหาคำตอบ", type: "ศิลป์-คำนวณ" },
+      { text: "B. พูดคุยหรือทำงานกับผู้คน", type: "ศิลป์-ภาษา" },
+      { text: "C. ลงมือสร้างหรือซ่อมสิ่งของ", type: "สายอาชีพ" },
+      { text: "D. ค้นคว้าปัญหาและหาคำอธิบาย", type: "วิทย์-คณิต" },
+      { text: "E. อ่านและวิเคราะห์เรื่องราวของผู้คนหรือสังคม", type: "ศิลป์-สังคม" }
+    ]
+  },
+  {
+    title: "16. ถ้าต้องเลือกสิ่งหนึ่งเพื่อพัฒนาตัวเองในช่วงปิดเทอม คุณจะเลือกอะไร?",
+    options: [
+      { text: "A. เรียนภาษาใหม่", type: "ศิลป์-ภาษา" },
+      { text: "B. ฝึกการใช้โปรแกรมคำนวณหรือจัดการข้อมูล", type: "ศิลป์-คำนวณ" },
+      { text: "C. ฝึกทักษะทำอาหาร งานช่าง หรือการสร้างของ", type: "สายอาชีพ" },
+      { text: "D. เรียนรู้เรื่องสังคมและเหตุการณ์ปัจจุบัน", type: "ศิลป์-สังคม" },
+      { text: "E. ทดลองทำโครงงานวิทยาศาสตร์", type: "วิทย์-คณิต" }
+    ]
+  },
+  {
+    title: "17. ถ้าครูให้คุณเป็นหัวหน้าทีม คุณจะเริ่มต้นอย่างไร?",
+    options: [
+      { text: "A. แบ่งหน้าที่และวางแผนตามความถนัดของแต่ละคน", type: "ศิลป์-สังคม" },
+      { text: "B. กำหนดเป้าหมายและขั้นตอนอย่างชัดเจน", type: "ศิลป์-คำนวณ" },
+      { text: "C. พูดคุยกับสมาชิกเพื่อรับฟังความคิดเห็น", type: "ศิลป์-ภาษา" },
+      { text: "D. ศึกษาข้อมูลและหาวิธีแก้ปัญหาที่เหมาะสม", type: "วิทย์-คณิต" },
+      { text: "E. วางแผนการลงมือทำให้เสร็จตามเวลาที่กำหนด", type: "สายอาชีพ" }
+    ]
+  },
+  {
+    title: "18. ถ้าคุณเห็นข่าวหนึ่งเรื่องบนอินเทอร์เน็ต สิ่งแรกที่คุณอยากทำคืออะไร?",
+    options: [
+      { text: "A. ตรวจสอบว่าข้อมูลนั้นมีหลักฐานทางวิทยาศาสตร์หรือไม่", type: "วิทย์-คณิต" },
+      { text: "B. ดูว่าข่าวนั้นเขียนหรือใช้ภาษาอย่างไร", type: "ศิลป์-ภาษา" },
+      { text: "C. คิดว่าข่าวนี้ส่งผลต่อคนในสังคมอย่างไร", type: "ศิลป์-สังคม" },
+      { text: "D. ดูตัวเลขหรือข้อมูลประกอบข่าว", type: "ศิลป์-คำนวณ" },
+      { text: "E. คิดว่าข้อมูลนี้นำไปใช้แก้ปัญหาจริงได้อย่างไร", type: "สายอาชีพ" }
+    ]
+  },
+  {
+    title: "19. ถ้าต้องเลือกงานอดิเรกใหม่ คุณจะเลือกอะไร?",
+    options: [
+      { text: "A. ฝึกพูดหรือเขียนภาษาต่างประเทศ", type: "ศิลป์-ภาษา" },
+      { text: "B. ทำของตกแต่งหรือประดิษฐ์ของ", type: "สายอาชีพ" },
+      { text: "C. อ่านเกี่ยวกับประวัติศาสตร์หรือสังคม", type: "ศิลป์-สังคม" },
+      { text: "D. เล่นเกมวางแผนหรือแก้โจทย์ตัวเลข", type: "ศิลป์-คำนวณ" },
+      { text: "E. ทดลองวิทยาศาสตร์ง่าย ๆ", type: "วิทย์-คณิต" }
+    ]
+  },
+  {
+    title: "20. ถ้าต้องทำงานที่มีข้อผิดพลาดเกิดขึ้น คุณมักจะเลือกวิธีใด?",
+    options: [
+      { text: "A. กลับไปดูว่าขั้นตอนไหนทำให้เกิดข้อผิดพลาด", type: "วิทย์-คณิต" },
+      { text: "B. พูดคุยกับคนในทีมเพื่อหาสาเหตุ", type: "ศิลป์-ภาษา" },
+      { text: "C. คำนวณใหม่และตรวจสอบตัวเลข", type: "ศิลป์-คำนวณ" },
+      { text: "D. ลงมือแก้ไขและทดลองจนใช้งานได้", type: "สายอาชีพ" },
+      { text: "E. ดูว่าปัญหานั้นเกี่ยวข้องกับผู้คนหรือสถานการณ์อย่างไร", type: "ศิลป์-สังคม" }
+    ]
+  }
+];
+
+    const zombieImages = [new Image(), new Image(), new Image(), new Image()];
+    zombieImages.forEach((img, i) => {
+      img.src = `images/zombie${i+1}.png`;
+    });
+
+    let targetCrosshair = null;
+    let isQuizActive = false;
+    let cannonBalls = [];
+    let particles = [];
+    let cannonAngle = 0;
+    let muzzleFlash = 0;
+
+    const fireflies = Array.from({ length: 25 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H * 0.8,
+      r: Math.random() * 3 + 1,
+      alpha: Math.random(),
+      speed: Math.random() * 0.02 + 0.005
+    }));
+
+    const zombieSpecs = [
+      { imgIndex: 0, w: 55, h: 65,  speed: 2 },
+      { imgIndex: 1, w: 95, h: 120,  speed: 2 },
+      { imgIndex: 2, w: 65, h: 70, speed: 2 },
+      { imgIndex: 3, w: 65, h: 65, speed: 2 }
+    ];
+
+    function getRandomZombie(laneY, extraDelay = 0) {
+      const spec = zombieSpecs[Math.floor(Math.random() * zombieSpecs.length)];
+      return {
+        imgIndex: spec.imgIndex,
+        x: W + extraDelay + Math.random() * 150,
+        y: laneY - spec.h * 0.5,
+        baseY: laneY - spec.h * 0.5,
+        w: spec.w,
+        h: spec.h,
+        speed: spec.speed,
+        alive: true
+      };
+    }
+
+    function spawnZombie() {
+      const lanes = [H * 0.46, H * 0.58, H * 0.70, H * 0.80];
+      zombies.push(getRandomZombie(lanes[Math.floor(Math.random() * lanes.length)], 0));
+    }
+
+    let zombies = [];
+
+    function initZombies() {
+      zombies = [
+        getRandomZombie(H * 0.46, 0),
+        getRandomZombie(H * 0.58, 80),
+        getRandomZombie(H * 0.58, 300),
+        getRandomZombie(H * 0.70, 0),
+        getRandomZombie(H * 0.70, 220),
+        getRandomZombie(H * 0.80, 150)
+      ];
+    }
+
+    function initAndStartCinematic() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      document.getElementById('btnStartGame').style.display = 'none';
+      playSound('start');
+
+      const el = document.getElementById('startCountdownText');
+      el.classList.add('show');
+
+      const audioReady = playSound('ready');
+
+      const startGameAction = () => {
+        document.getElementById('startCountdownModal').style.display = 'none';
+        gameStarted = true;
+      };
+
+      if (audioReady) {
+        audioReady.onended = startGameAction;
+        const durationMs = (audioReady.duration && !isNaN(audioReady.duration)) ? audioReady.duration * 1000 : 1800;
+        setTimeout(() => {
+          if (!gameStarted) startGameAction();
+        }, durationMs);
+      } else {
+        setTimeout(startGameAction, 1800);
+      }
+    }
+
+    function drawCemeteryBackground() {
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+      skyGrad.addColorStop(0, '#0a1526');
+      skyGrad.addColorStop(0.6, '#132a4a');
+      skyGrad.addColorStop(1, '#1b3b5a');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      const moonX = W * 0.82;
+      const moonY = H * 0.22;
+      const moonRadius = 40;
+
+      const moonGlow = ctx.createRadialGradient(moonX, moonY, moonRadius * 0.8, moonX, moonY, moonRadius * 2.5);
+      moonGlow.addColorStop(0, 'rgba(255, 255, 220, 0.8)');
+      moonGlow.addColorStop(0.5, 'rgba(255, 255, 180, 0.2)');
+      moonGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = moonGlow;
+      ctx.beginPath(); ctx.arc(moonX, moonY, moonRadius * 2.5, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#fffae6';
+      ctx.beginPath(); ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#17301c';
+      ctx.beginPath();
+      ctx.moveTo(0, H * 0.55);
+      ctx.quadraticCurveTo(W * 0.25, H * 0.48, W * 0.5, H * 0.53);
+      ctx.quadraticCurveTo(W * 0.75, H * 0.58, W, H * 0.5);
+      ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.fill();
+
+      ctx.fillStyle = '#0f2113';
+      ctx.beginPath();
+      ctx.moveTo(0, H * 0.65);
+      ctx.quadraticCurveTo(W * 0.4, H * 0.58, W * 0.7, H * 0.64);
+      ctx.quadraticCurveTo(W * 0.85, H * 0.67, W, H * 0.62);
+      ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.fill();
+
+      fireflies.forEach(f => {
+        f.alpha += f.speed;
+        if (f.alpha > 1 || f.alpha < 0) f.speed = -f.speed;
+        ctx.fillStyle = `rgba(186, 255, 41, ${Math.max(0, f.alpha)})`;
+        ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+
+    function drawCannon() {
+      const baseX = 20;
+      const baseY = H * 0.85;
+
+      ctx.save();
+      ctx.translate(baseX, baseY);
+      ctx.save();
+      ctx.rotate(cannonAngle);
+
+      const metalGrad = ctx.createLinearGradient(0, -15, 0, 15);
+      metalGrad.addColorStop(0, '#718093');
+      metalGrad.addColorStop(0.5, '#2f3640');
+      metalGrad.addColorStop(1, '#1e272e');
+      ctx.fillStyle = metalGrad;
+      ctx.fillRect(0, -12, 60, 24);
+
+      if (muzzleFlash > 0) {
+        ctx.fillStyle = '#ff9f43';
+        ctx.beginPath(); ctx.arc(70, 0, 15, 0, Math.PI * 2); ctx.fill();
+        muzzleFlash--;
+      }
+      ctx.restore();
+
+      ctx.fillStyle = '#535c68';
+      ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    function createExplosion(x, y) {
+      if (particles.length > 60) {
+        particles.splice(0, 20);
+      }
+
+      for (let i = 0; i < 15; i++) {
+        particles.push({
+          x: x, y: y,
+          vx: (Math.random() - 0.5) * 10,
+          vy: (Math.random() - 0.5) * 10,
+          radius: Math.random() * 4 + 2,
+          color: ['#ff4757', '#ffa502', '#badc58', '#ffffff'][Math.floor(Math.random() * 4)],
+          life: 15
+        });
+      }
+    }
+
+    function drawZombies() {
+      zombies.forEach((z, idx) => {
+        if (!z.alive) return;
+        if (gameStarted) z.x -= z.speed;
+
+        if (z.x < -100) {
+          zombies[idx] = getRandomZombie(z.baseY + z.h * 0.5);
+          return;
+        }
+
+        const img = zombieImages[z.imgIndex];
+        if (img) {
+          ctx.drawImage(img, z.x, z.y, z.w, z.h);
+        }
+      });
+    }
+
+    function drawCrosshair() {
+      if (!targetCrosshair) return;
+      ctx.strokeStyle = '#ff4757';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(targetCrosshair.x, targetCrosshair.y, 15, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    function updateScoreDisplay() {
+      document.getElementById('scoreText').innerText = score;
+    }
+
+    let lastShootTime = 0;
+    const SHOOT_COOLDOWN = 120;
+
+    function handlePointer(e) {
+      if (!gameStarted || isQuizActive) return;
+
+      const now = Date.now();
+      if (now - lastShootTime < SHOOT_COOLDOWN) {
+        return;
+      }
+      lastShootTime = now;
+
+      playSound('shoot');
+
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      const clickX = clientX - rect.left;
+      const clickY = clientY - rect.top;
+
+      targetCrosshair = { x: clickX, y: clickY };
+
+      const startX = 20;
+      const startY = H * 0.85;
+      
+      cannonAngle = Math.atan2(clickY - startY, clickX - startX);
+      muzzleFlash = 4;
+
+      let hit = zombies.find(z => z.alive && 
+        clickX >= z.x && clickX <= z.x + z.w &&
+        clickY >= z.y && clickY <= z.y + z.h
+      );
+
+      const speed = 20;
+
+      if (cannonBalls.length > 10) cannonBalls.shift();
+
+      cannonBalls.push({
+        x: startX, y: startY,
+        vx: Math.cos(cannonAngle) * speed,
+        vy: Math.sin(cannonAngle) * speed,
+        tx: clickX, ty: clickY,
+        hit: hit
+      });
+    }
+
+    canvas.addEventListener('pointerdown', handlePointer);
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, W, H);
+
+      drawCemeteryBackground();
+      drawCannon();
+      drawZombies();
+
+      cannonBalls.forEach((b, index) => {
+        b.x += b.vx;
+        b.y += b.vy;
+
+        ctx.fillStyle = '#ffbb00';
+        ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, Math.PI * 2); ctx.fill();
+
+        if (Math.hypot(b.x - b.tx, b.y - b.ty) < 15) {
+          cannonBalls.splice(index, 1);
+          targetCrosshair = null;
+          createExplosion(b.tx, b.ty);
+
+          if (b.hit) {
+            score += 5;
+            updateScoreDisplay();
+
+            b.hit.alive = false;
+            setTimeout(showQuiz, 200);
+          } else {
+            score = Math.max(0, score - 1);
+            updateScoreDisplay();
+          }
+        }
+      });
+
+      particles.forEach((p, index) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+        if (p.life <= 0) particles.splice(index, 1);
+      });
+
+      drawCrosshair();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function showQuiz() {
+      isQuizActive = true;
+
+      const q = questions[currentQuestionIndex];
+      document.getElementById('question-title').innerText = q.title;
+
+      const container = document.getElementById('options-container');
+      container.innerHTML = '';
+
+      q.options.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-option';
+        btn.innerText = opt.text;
+        btn.onclick = () => selectOption(opt.type);
+        container.appendChild(btn);
+      });
+
+      document.getElementById('quizModal').style.display = 'flex';
+    }
+
+    function selectOption(type) {
+      selectedTypes.push(type);
+      document.getElementById('quizModal').style.display = 'none';
+
+      currentQuestionIndex++;
+      document.getElementById('zombieCount').innerText = currentQuestionIndex;
+
+      if (currentQuestionIndex < 20) {
+        isQuizActive = false;
+        spawnZombie();
+      } else {
+        finishGame();
+      }
+    }
+
+    function finishGame() {
+      isQuizActive = true;
+
+      stopSound('start');
+      playSound('quiz');
+
+      document.getElementById('resultModal').style.display = 'flex';
+
+      let timeLeft = 5;
+      const timerEl = document.getElementById('timerText');
+
+      const countdown = setInterval(() => {
+        timeLeft--;
+        timerEl.innerText = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(countdown);
+          showFinalResult();
+        }
+      }, 1000);
+    }
+
+    function showFinalResult() {
+      document.getElementById('timerText').style.display = 'none';
+
+      const counts = {};
+      selectedTypes.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+
+      let topType = "";
+      let maxCount = 0;
+      for (let t in counts) {
+        if (counts[t] > maxCount) {
+          maxCount = counts[t];
+          topType = t;
+        }
+      }
+
+      const resultBox = document.getElementById('result-box');
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = `
+        <h3 style="margin-top:0; color:#03dac6; font-size:1.1rem;">💡 สายการเรียนที่เหมาะสมกับคุณคือ: ${topType}</h3>
+        <p style="margin-bottom:5px; font-size:0.95rem;">👤 <strong>ผู้เล่น:</strong> ${playerName}</p>
+        <p style="margin-bottom:5px; font-size:0.95rem;">⭐ <strong>คะแนนยิงปืนรวม:</strong> ${score} คะแนน</p>
+        <p style="margin-bottom:0; font-size:0.85rem; color:#aaa;">คุณได้ตอบคำถามครบทั้ง 20 ข้อเรียบร้อยแล้ว!</p>
+
+        <!-- ปุ่ม NEXT -->
+        <div style="text-align: center;">
+          <button class="btn-next" onclick="showRankingPage()">NEXT ➔</button>
+        </div>
+      `;
+
+      if (socket) {
+        socket.emit('submitAnswer', { 
+          playerName: playerName,
+          score: score,
+          optionText: topType 
+        });
+      }
+    }
+
+    // ฟังก์ชันสำหรับเปิดหน้าจัดอันดับสถิติสายเรียน (แสดงเฉพาะ %)
+    // ดักรับสถิติจริงที่ส่งมาจาก Server
+      let currentStats = {
+        "สายวิทย์-คณิต": 0,
+        "สายอาชีพ": 0,
+        "สายศิลป์": 0,
+        "สายภาษา": 0
+      };
+
+      if (typeof socket !== 'undefined') {
+        socket.on('updateStats', (stats) => {
+          currentStats = stats;
+        });
+      }
+
+      function showRankingPage() {
+        document.getElementById('resultModal').style.display = 'none';
+
+        const container = document.getElementById('rankingContainer');
+        container.innerHTML = '';
+
+        const categories = [
+          { name: "🔬 สายวิทย์-คณิต", key: "สายวิทย์-คณิต", color: "#ff4757" },
+          { name: "🛠️ สายอาชีพ", key: "สายอาชีพ", color: "#ffa502" },
+          { name: "🎨 สายศิลป์", key: "สายศิลป์", color: "#2ed573" },
+          { name: "🗣️ สายภาษา", key: "สายภาษา", color: "#1e90ff" }
+        ];
+
+        categories.forEach(item => {
+          const percent = currentStats[item.key] || 0;
+          const div = document.createElement('div');
+          div.className = 'ranking-item';
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+              <span>${item.name}</span>
+              <strong>${percent}%</strong>
+            </div>
+            <div style="background:#333; height:10px; border-radius:5px; overflow:hidden;">
+              <div style="background:${item.color}; width:${percent}%; height:100%;"></div>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+
+        document.getElementById('rankingModal').style.display = 'flex';
+      }
+
+    function selectAnswer(buttonElement) {
+      // ป้องกันการกดซ้ำถ้าระบบกำลังประมวลผล
+      if (buttonElement.disabled) return;
+      buttonElement.disabled = true;
+
+      // โค้ดส่งคำตอบเดิมของคุณ...
+      
+      // ปลดล็อกปุ่มหลังจากผ่านไป 300ms
+      setTimeout(() => {
+        buttonElement.disabled = false;
+      }, 300);
+    }
+    resizeCanvas();
+    initZombies();
+    gameLoop();
+    socket.on('updateStats', function(stats) {
+    const total = stats.total || 1;
+    const mathPercent = Math.round(((stats['วิทย์-คณิต'] || 0) / total) * 100);
+    const vocPercent = Math.round(((stats['สายอาชีพ'] || 0) / total) * 100);
+    const artPercent = Math.round(((stats['สายศิลป์'] || 0) / total) * 100);
+    const langPercent = Math.round(((stats['สายภาษา'] || 0) / total) * 100);
+
+    updateStatText("สายวิทย์-คณิต", mathPercent);
+    updateStatText("สายอาชีพ", vocPercent);
+    updateStatText("สายศิลป์", artPercent);
+    updateStatText("สายภาษา", langPercent);
+  });
+
+  function updateStatText(label, percent) {
+    const elements = document.querySelectorAll('div, p, span');
+    elements.forEach(el => {
+      if (el.children.length === 0 && el.innerText.includes(label)) {
+        let cleanLabel = el.innerText.replace(/[\d%]+/g, '').trim();
+        el.innerText = `${cleanLabel} ${percent}%`;
+      }
+    });
+  }
+  </script>
+</body>
+</html>
